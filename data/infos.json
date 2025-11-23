@@ -1,0 +1,12 @@
+[
+  {
+    "tittle": "DevTools Toolkit",
+    "description": "Um site com ferramentas de desenvolvimento e de organizacao pessoal, para auxilio em trabalhos diarios. Desenvolvido em html basico, css e JS.",
+    "github link": "https://github.com/AlvaroPereir4/DevBelt"
+},
+  {
+    "tittle": "Base64 Viewer",
+    "description": "B64V (Base64 Visualizer) is a lightweight and cross-platform desktop app to decode, preview, and manipulate multiple Base64 images in real-time.",
+    "github link": "https://github.com/AlvaroPereir4/B64V"
+  }
+]
