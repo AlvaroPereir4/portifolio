@@ -8,33 +8,52 @@
 </head>
 <body>
     <header>
-        <h1>Meu Portfólio</h1>
+        <h1>Portfólio</h1>
     </header>
     <main>
         <div id="container">
             <section id="sobre">
-                <h2>Sobre Mim</h2>
-                <p>Insira aqui um pequeno texto sobre você e seus objetivos.</p>
+                <img src="yo.jpg" alt="Minha Foto" style="width: 150px; border-radius: 50%;">
+                <h2>Ola, eu sou o Alvaro Pereira</h2>
+                <h3>Desenvolvedor de Softwares</h3>
+                <p>Desenvolvedor Python especializado em automação e integração de sistemas, com experiência em processamento e analise de dados. Busco evoluir constantemente e entregar soluções práticas, criativas, eficientes e bem estruturadas.</p>
             </section>
             <section id="projetos">
-                <h2>Meus Projetos</h2>
-                <div class="projeto">
-                    <h3>Nome do Projeto 1</h3>
-                    <p>Pequena introdução sobre o projeto 1.</p>
-                    <a href="#">Link para o projeto 1</a>
-                </div>
-                <div class="projeto">
-                    <h3>Nome do Projeto 2</h3>
-                    <p>Pequena introdução sobre o projeto 2.</p>
-                    <a href="#">Link para o projeto 2</a>
-                </div>
-                <div class="projeto">
-                    <h3>Nome do Projeto 3</h3>
-                    <p>Pequena introdução sobre o projeto 3.</p>
-                    <a href="#">Link para o projeto 3</a>
-                </div>
+                <h2>Projetos desenvolvidos</h2>
             </section>
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('data/infos.json')
+                .then(response => response.json())
+                .then(data => {
+                    const projetosContainer = document.getElementById('projetos');
+                    data.forEach(projeto => {
+                        const projetoDiv = document.createElement('div');
+                        projetoDiv.classList.add('projeto');
+
+                        const titulo = document.createElement('h3');
+                        titulo.textContent = projeto.tittle;
+
+                        const descricao = document.createElement('p');
+                        descricao.textContent = projeto.description;
+
+                        const link = document.createElement('a');
+                        link.href = projeto['github link'];
+                        link.textContent = 'Ver repositório no GitHub';
+                        link.target = '_blank'; // Abrir em nova aba
+
+                        projetoDiv.appendChild(titulo);
+                        projetoDiv.appendChild(descricao);
+                        projetoDiv.appendChild(link);
+
+                        projetosContainer.appendChild(projetoDiv);
+                    });
+                })
+                .catch(error => console.error('Erro ao carregar os projetos:', error));
+        });
+    </script>
 </body>
 </html>
