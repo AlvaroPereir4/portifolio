@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Portfólio</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
     <header>
@@ -13,9 +14,14 @@
     <main>
         <div id="container">
             <section id="sobre">
-                <img src="yo.jpg" alt="Minha Foto" style="width: 150px; border-radius: 50%;">
+                <img src="yo.jpg" alt="Minha Foto">
                 <h2>Ola, eu sou o Alvaro Pereira</h2>
                 <h3>Desenvolvedor de Softwares</h3>
+                <div id="personal-links">
+                    <a id="github-link" href="#" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                    <a id="linkedin-link" href="#" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    <a id="curriculo-link" href="#" target="_blank"><i class="fas fa-file-alt"></i> Currículo</a>
+                </div>
                 <p>Desenvolvedor Python especializado em automação e integração de sistemas, com experiência em processamento e analise de dados. Busco evoluir constantemente e entregar soluções práticas, criativas, eficientes e bem estruturadas.</p>
             </section>
             <section id="projetos">
@@ -26,6 +32,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Carregar Projetos
             fetch('data/infos.json')
                 .then(response => response.json())
                 .then(data => {
@@ -33,26 +40,34 @@
                     data.forEach(projeto => {
                         const projetoDiv = document.createElement('div');
                         projetoDiv.classList.add('projeto');
-
                         const titulo = document.createElement('h3');
                         titulo.textContent = projeto.tittle;
-
                         const descricao = document.createElement('p');
                         descricao.textContent = projeto.description;
-
                         const link = document.createElement('a');
                         link.href = projeto['github link'];
                         link.textContent = 'Ver repositório no GitHub';
-                        link.target = '_blank'; // Abrir em nova aba
-
+                        link.target = '_blank';
                         projetoDiv.appendChild(titulo);
                         projetoDiv.appendChild(descricao);
                         projetoDiv.appendChild(link);
-
                         projetosContainer.appendChild(projetoDiv);
                     });
                 })
                 .catch(error => console.error('Erro ao carregar os projetos:', error));
+
+            // Carregar Links Pessoais
+            fetch('data/personal-links.json')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const links = data[0];
+                        document.getElementById('github-link').href = links['github link'];
+                        document.getElementById('linkedin-link').href = links['linkedin link'];
+                        document.getElementById('curriculo-link').href = links['curriculo link'];
+                    }
+                })
+                .catch(error => console.error('Erro ao carregar os links pessoais:', error));
         });
     </script>
 </body>
