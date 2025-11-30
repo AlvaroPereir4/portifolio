@@ -111,6 +111,12 @@ main {
     border-bottom: 1px solid #333;
 }
 
+.projeto-links {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
 .projeto:last-child {
     border-bottom: none;
     margin-bottom: 0;

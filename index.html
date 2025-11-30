@@ -52,7 +52,7 @@
                 <p>Desenvolvedor Python especializado em automação e integração de sistemas, com experiência em processamento e analise de dados. Busco evoluir constantemente e entregar soluções práticas, criativas, eficientes e bem estruturadas.</p>
             </section>
             <section id="projetos">
-                <h2>Projetos desenvolvidos</h2>
+                <h2>Projetos desenvolvidos:</h2>
             </section>
         </div>
     </main>
@@ -67,17 +67,41 @@
                     data.forEach(projeto => {
                         const projetoDiv = document.createElement('div');
                         projetoDiv.classList.add('projeto');
+
                         const titulo = document.createElement('h3');
                         titulo.textContent = projeto.tittle;
+
                         const descricao = document.createElement('p');
                         descricao.textContent = projeto.description;
-                        const link = document.createElement('a');
-                        link.href = projeto['github link'];
-                        link.textContent = 'Ver repositório no GitHub';
-                        link.target = '_blank';
+
+                        const linksDiv = document.createElement('div');
+                        linksDiv.classList.add('projeto-links');
+
+                        const githubLink = document.createElement('a');
+                        githubLink.href = projeto['github link'];
+                        githubLink.textContent = 'Ver repositório no GitHub';
+                        githubLink.target = '_blank';
+                        linksDiv.appendChild(githubLink);
+
+                        if (projeto['project link']) {
+                            const projectLink = document.createElement('a');
+                            projectLink.href = projeto['project link'];
+                            projectLink.textContent = 'Link do projeto';
+                            projectLink.target = '_blank';
+                            linksDiv.appendChild(projectLink);
+                        }
+
+                        if (projeto['doc_link']) {
+                            const docLink = document.createElement('a');
+                            docLink.href = projeto['doc_link'];
+                            docLink.textContent = 'Documentação';
+                            docLink.target = '_blank';
+                            linksDiv.appendChild(docLink);
+                        }
+
                         projetoDiv.appendChild(titulo);
                         projetoDiv.appendChild(descricao);
-                        projetoDiv.appendChild(link);
+                        projetoDiv.appendChild(linksDiv);
                         projetosContainer.appendChild(projetoDiv);
                     });
                 })
