@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
+    <!-- Importar Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header>
@@ -41,84 +43,156 @@
     <main>
         <div id="container">
             <section id="sobre">
-                <img src="yo.jpg" alt="Minha Foto">
-                <h2>Alvaro Pereira</h2>
-                <h3>Desenvolvedor de Softwares</h3>
-                <div id="personal-links">
-                    <a id="github-link" href="#" target="_blank"><i class="fab fa-github"></i> GitHub</a>
-                    <a id="linkedin-link" href="#" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
-                    <a id="curriculo-link" href="#" target="_blank"><i class="fas fa-file-alt"></i> Currículo</a>
+                <!-- Dados serão carregados via JS -->
+                <div id="profile-content">
+                    <p>Carregando perfil...</p>
                 </div>
-                <p>Desenvolvedor Python especializado em automação e integração de sistemas, com experiência em processamento e analise de dados. Busco evoluir constantemente e entregar soluções práticas, criativas, eficientes e bem estruturadas.</p>
             </section>
             <section id="projetos">
                 <h2>Projetos desenvolvidos:</h2>
+                <div id="projects-list">
+                    <p>Carregando projetos...</p>
+                </div>
             </section>
         </div>
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carregar Projetos
-            fetch('data/infos.json')
-                .then(response => response.json())
-                .then(data => {
-                    const projetosContainer = document.getElementById('projetos');
-                    data.forEach(projeto => {
-                        const projetoDiv = document.createElement('div');
-                        projetoDiv.classList.add('projeto');
-
-                        const titulo = document.createElement('h3');
-                        titulo.textContent = projeto.tittle;
-
-                        const descricao = document.createElement('p');
-                        descricao.textContent = projeto.description;
-
-                        const linksDiv = document.createElement('div');
-                        linksDiv.classList.add('projeto-links');
-
-                        const githubLink = document.createElement('a');
-                        githubLink.href = projeto['github link'];
-                        githubLink.textContent = 'Ver repositório no GitHub';
-                        githubLink.target = '_blank';
-                        linksDiv.appendChild(githubLink);
-
-                        if (projeto['project link']) {
-                            const projectLink = document.createElement('a');
-                            projectLink.href = projeto['project link'];
-                            projectLink.textContent = 'Link do projeto';
-                            projectLink.target = '_blank';
-                            linksDiv.appendChild(projectLink);
-                        }
-
-                        if (projeto['doc_link']) {
-                            const docLink = document.createElement('a');
-                            docLink.href = projeto['doc_link'];
-                            docLink.textContent = 'Documentação';
-                            docLink.target = '_blank';
-                            linksDiv.appendChild(docLink);
-                        }
-
-                        projetoDiv.appendChild(titulo);
-                        projetoDiv.appendChild(descricao);
-                        projetoDiv.appendChild(linksDiv);
-                        projetosContainer.appendChild(projetoDiv);
-                    });
-                })
-                .catch(error => console.error('Erro ao carregar os projetos:', error));
-
-            // Carregar Links Pessoais
-            fetch('data/personal-links.json')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const links = data[0];
-                        document.getElementById('github-link').href = links['github link'];
-                        document.getElementById('linkedin-link').href = links['linkedin link'];
-                        document.getElementById('curriculo-link').href = links['curriculo link'];
+        // Função para carregar variáveis de ambiente e inicializar Supabase
+        async function initSupabase() {
+            try {
+                const response = await fetch('.env');
+                if (!response.ok) throw new Error('Não foi possível carregar o arquivo .env');
+                const text = await response.text();
+                
+                const env = {};
+                text.split('\n').forEach(line => {
+                    const parts = line.split('=');
+                    if (parts.length >= 2) {
+                        const key = parts[0].trim();
+                        const value = parts.slice(1).join('=').trim();
+                        env[key] = value;
                     }
-                })
-                .catch(error => console.error('Erro ao carregar os links pessoais:', error));
+                });
+
+                if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+                    throw new Error('Credenciais do Supabase não encontradas no .env');
+                }
+
+                return window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                return null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const supabase = await initSupabase();
+
+            if (!supabase) {
+                document.getElementById('profile-content').innerHTML = '<p>Erro de configuração. Verifique o console.</p>';
+                document.getElementById('projects-list').innerHTML = '<p>Erro de configuração.</p>';
+                return;
+            }
+            
+            // --- Carregar Perfil ---
+            async function loadProfile() {
+                const profileContainer = document.getElementById('profile-content');
+                try {
+                    const { data, error } = await supabase
+                        .from('profile')
+                        .select('*')
+                        .limit(1)
+                        .single();
+
+                    if (error) throw error;
+
+                    if (data) {
+                        profileContainer.innerHTML = `
+                            <img src="${data.avatar_url || 'yo.jpg'}" alt="Minha Foto">
+                            <h2>${data.name}</h2>
+                            <h3>${data.role}</h3>
+                            <div id="personal-links">
+                                <a id="github-link" href="${data.github_link}" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                                <a id="linkedin-link" href="${data.linkedin_link}" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                                <a id="curriculo-link" href="${data.resume_link}" target="_blank"><i class="fas fa-file-alt"></i> Currículo</a>
+                            </div>
+                            <p>${data.bio}</p>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar perfil do Supabase:', error);
+                    profileContainer.innerHTML = '<p>Erro ao carregar informações do perfil.</p>';
+                }
+            }
+
+            // --- Carregar Projetos ---
+            async function loadProjects() {
+                const projectsContainer = document.getElementById('projects-list');
+                try {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    projectsContainer.innerHTML = ''; // Limpa o loading
+
+                    if (data && data.length > 0) {
+                        data.forEach(projeto => {
+                            const projetoDiv = document.createElement('div');
+                            projetoDiv.classList.add('projeto');
+
+                            const titulo = document.createElement('h3');
+                            titulo.textContent = projeto.title;
+
+                            const descricao = document.createElement('p');
+                            descricao.textContent = projeto.description;
+
+                            const linksDiv = document.createElement('div');
+                            linksDiv.classList.add('projeto-links');
+
+                            if (projeto.github_link) {
+                                const githubLink = document.createElement('a');
+                                githubLink.href = projeto.github_link;
+                                githubLink.innerHTML = '<i class="fab fa-github"></i> Ver no GitHub';
+                                githubLink.target = '_blank';
+                                linksDiv.appendChild(githubLink);
+                            }
+
+                            if (projeto.project_link) {
+                                const projectLink = document.createElement('a');
+                                projectLink.href = projeto.project_link;
+                                projectLink.innerHTML = '<i class="fas fa-external-link-alt"></i> Link do projeto';
+                                projectLink.target = '_blank';
+                                linksDiv.appendChild(projectLink);
+                            }
+
+                            if (projeto.doc_link) {
+                                const docLink = document.createElement('a');
+                                docLink.href = projeto.doc_link;
+                                docLink.innerHTML = '<i class="fas fa-book"></i> Documentação';
+                                docLink.target = '_blank';
+                                linksDiv.appendChild(docLink);
+                            }
+
+                            projetoDiv.appendChild(titulo);
+                            projetoDiv.appendChild(descricao);
+                            projetoDiv.appendChild(linksDiv);
+                            projectsContainer.appendChild(projetoDiv);
+                        });
+                    } else {
+                        projectsContainer.innerHTML = '<p>Nenhum projeto encontrado.</p>';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar projetos:', error);
+                    projectsContainer.innerHTML = '<p>Erro ao carregar projetos.</p>';
+                }
+            }
+
+            await loadProfile();
+            await loadProjects();
         });
     </script>
 </body>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Portfólio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
+</head>
+<body>
+    <header>
+        <h3>Skills:</h3>
+        <div id="habilidades-container">
+            <div class="habilidade">
+                <i class="devicon-python-plain"></i>
+                <span>Python</span>
+            </div>
+            <div class="habilidade">
+                <i class="devicon-html5-plain"></i>
+                <span>HTML</span>
+            </div>
+            <div class="habilidade">
+                <i class="devicon-javascript-plain"></i>
+                <span>JavaScript</span>
+            </div>
+            <div class="habilidade">
+                <i class="devicon-css3-plain"></i>
+                <span>CSS</span>
+            </div>
+            <div class="habilidade">
+                <i class="devicon-mysql-plain"></i>
+                <span>SQL</span>
+            </div>
+            <div class="habilidade">
+                <i class="devicon-mongodb-plain"></i>
+                <span>MongoDB</span>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div id="container">
+            <section id="sobre">
+                {% if profile %}
+                <div id="profile-content">
+                    <img src="{{ url_for('static', filename=profile.avatar_url) if profile.avatar_url else 'yo.jpg' }}" alt="Minha Foto">
+                    <h2>{{ profile.name }}</h2>
+                    <h3>{{ profile.role }}</h3>
+                    <div id="personal-links">
+                        {% if profile.github_link %}
+                        <a id="github-link" href="{{ profile.github_link }}" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                        {% endif %}
+                        {% if profile.linkedin_link %}
+                        <a id="linkedin-link" href="{{ profile.linkedin_link }}" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                        {% endif %}
+                        {% if profile.resume_link %}
+                        <a id="curriculo-link" href="{{ profile.resume_link }}" target="_blank"><i class="fas fa-file-alt"></i> Currículo</a>
+                        {% endif %}
+                    </div>
+                    <p>{{ profile.bio }}</p>
+                </div>
+                {% else %}
+                <p>Perfil não encontrado.</p>
+                {% endif %}
+            </section>
+            <section id="projetos">
+                <h2>Projetos desenvolvidos:</h2>
+                <div id="projects-list">
+                    {% if projects %}
+                        {% for projeto in projects %}
+                        <div class="projeto">
+                            <h3>{{ projeto.title }}</h3>
+                            <p>{{ projeto.description }}</p>
+                            <div class="projeto-links">
+                                {% if projeto.github_link %}
+                                <a href="{{ projeto.github_link }}" target="_blank"><i class="fab fa-github"></i> Ver no GitHub</a>
+                                {% endif %}
+                                {% if projeto.project_link %}
+                                <a href="{{ projeto.project_link }}" target="_blank"><i class="fas fa-external-link-alt"></i> Link do projeto</a>
+                                {% endif %}
+                                {% if projeto.doc_link %}
+                                <a href="{{ projeto.doc_link }}" target="_blank"><i class="fas fa-book"></i> Documentação</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>Nenhum projeto encontrado.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>
