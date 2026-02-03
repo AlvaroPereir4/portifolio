@@ -29,7 +29,7 @@
         <!-- Gerenciar Perfil -->
         <div class="admin-section">
             <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Editar Perfil</h2>
-            <form action="{{ url_for('update_profile') }}" method="POST" style="margin-top: 1.5rem;">
+            <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
                     <div>
                         <label>Nome</label>
@@ -44,10 +44,23 @@
                     <label>Bio (Resumo)</label>
                     <textarea name="bio" rows="3" required>{{ profile.bio if profile else '' }}</textarea>
                 </div>
-                <div class="form-group">
-                    <label>Avatar URL (Caminho da imagem)</label>
-                    <input type="text" name="avatar_url" value="{{ profile.avatar_url if profile else '' }}">
+                
+                <!-- Campo de Upload de Imagem -->
+                <div class="form-group" style="background-color: var(--input-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <label style="margin-bottom: 0.5rem;">Foto de Perfil</label>
+                    
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <img src="{{ url_for('profile_image') }}" 
+                             alt="Atual" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color);">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Imagem atual</span>
+                    </div>
+
+                    <div style="display: grid; gap: 0.5rem;">
+                        <label for="avatar_file" style="font-size: 0.9rem; color: var(--text-secondary);">Fazer upload de nova imagem:</label>
+                        <input type="file" name="avatar_file" id="avatar_file" accept="image/*" style="background-color: transparent; border: none; padding-left: 0;">
+                    </div>
                 </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                     <div>
                         <label><i class="fab fa-github"></i> GitHub</label>

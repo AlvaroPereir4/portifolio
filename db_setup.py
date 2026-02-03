@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def create_tables():
-    # Tenta pegar SUPABASE_URL (como você configurou) ou DATABASE_URL
     url = os.environ.get('SUPABASE_URL') or os.environ.get('DATABASE_URL')
     
     if not url:
@@ -16,9 +15,10 @@ def create_tables():
         conn = psycopg2.connect(url)
         cur = conn.cursor()
 
-        print("Criando tabelas com prefixo 'portifolio_'...")
+        print("Criando/Atualizando tabelas com prefixo 'portifolio_'...")
 
         # 1. Tabela de Perfil (portifolio_profile)
+        # Adicionando coluna avatar_data (BYTEA) para salvar a imagem binária
         cur.execute("""
             CREATE TABLE IF NOT EXISTS portifolio_profile (
                 id SERIAL PRIMARY KEY,
@@ -26,11 +26,20 @@ def create_tables():
                 role TEXT,
                 bio TEXT,
                 avatar_url TEXT,
+                avatar_data BYTEA, 
                 github_link TEXT,
                 linkedin_link TEXT,
                 resume_link TEXT
             );
         """)
+        
+        # Tenta adicionar a coluna avatar_data caso a tabela já exista sem ela
+        try:
+            cur.execute("ALTER TABLE portifolio_profile ADD COLUMN IF NOT EXISTS avatar_data BYTEA;")
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"Nota: {e}")
 
         # 2. Tabela de Projetos (portifolio_projects)
         cur.execute("""
@@ -65,7 +74,7 @@ def create_tables():
         conn.commit()
         cur.close()
         conn.close()
-        print("Sucesso! Tabelas 'portifolio_profile' e 'portifolio_projects' criadas/verificadas.")
+        print("Sucesso! Tabelas atualizadas.")
 
     except Exception as e:
         print(f"Erro ao conectar ou criar tabelas: {e}")

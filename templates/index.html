@@ -13,7 +13,9 @@
     <div class="container">
         <header>
             {% if profile %}
-                <img src="{{ url_for('static', filename=profile.avatar_url) if profile.avatar_url else 'yo.jpg' }}" alt="Foto de Perfil" class="profile-img">
+                <!-- Agora a imagem vem sempre da rota dinâmica que busca no banco -->
+                <img src="{{ url_for('profile_image') }}" alt="Foto de Perfil" class="profile-img">
+                
                 <h1>{{ profile.name }}</h1>
                 <h2>{{ profile.role }}</h2>
                 <p class="bio">{{ profile.bio }}</p>
@@ -100,7 +102,12 @@
         </section>
         
         <footer style="text-align: center; margin-top: 5rem; color: var(--text-secondary); font-size: 0.9rem; padding-bottom: 2rem;">
-            <p>&copy; 2024 {{ profile.name if profile else 'Portfólio' }}. Todos os direitos reservados.</p>
+            <p>
+                Sendo desenvolvido em 
+                <a href="https://github.com/AlvaroPereir4/portifolio" target="_blank" style="color: var(--accent-color); font-weight: 600; margin-left: 4px;">
+                    <i class="fab fa-github"></i> AlvaroPereir4/portifolio
+                </a>
+            </p>
         </footer>
     </div>
 </body>
