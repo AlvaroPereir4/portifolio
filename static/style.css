@@ -27,7 +27,19 @@ body {
     background-color: var(--bg-color);
     color: var(--text-primary);
     line-height: 1.6;
-    font-size: 18px; /* Aumentado fonte base */
+    font-size: 18px;
+    position: relative; /* Necessário para o z-index funcionar bem */
+}
+
+/* --- Canvas de Fundo --- */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Fica atrás de tudo */
+    opacity: 0.6; /* Suavidade do efeito */
 }
 
 a {
@@ -53,27 +65,70 @@ header {
     padding: 5rem 0;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 4rem;
+    position: relative; /* Para garantir que fique sobre o canvas */
 }
 
-.profile-img {
-    width: 180px; /* Aumentado */
-    height: 180px; /* Aumentado */
+/* Container da imagem para o Skeleton Loading */
+.profile-img-container {
+    width: 220px; /* AUMENTADO de 180px para 220px */
+    height: 220px; /* AUMENTADO de 180px para 220px */
+    margin: 0 auto 2rem;
+    position: relative;
     border-radius: 50%;
-    object-fit: cover;
+    overflow: hidden;
     border: 4px solid var(--accent-color);
-    margin-bottom: 2rem;
-    box-shadow: 0 0 30px rgba(232, 124, 3, 0.25);
+    box-shadow: 0 0 40px rgba(232, 124, 3, 0.3); /* Aumentei um pouco o brilho */
+    background-color: var(--card-bg);
+}
+
+/* A imagem em si */
+.profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-img.loaded {
+    opacity: 1;
+}
+
+/* O efeito de Skeleton (Shimmer) */
+.profile-img-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        var(--card-bg) 0%,
+        #2a2827 50%,
+        var(--card-bg) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    z-index: 1;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 h1 {
-    font-size: 3.5rem; /* Aumentado */
+    font-size: 3.5rem;
     margin-bottom: 0.5rem;
     color: var(--text-primary);
     font-weight: 700;
 }
 
 h2 {
-    font-size: 1.5rem; /* Aumentado */
+    font-size: 1.5rem;
     color: var(--text-secondary);
     font-weight: 400;
     margin-bottom: 2rem;
@@ -94,7 +149,7 @@ h2 {
 
 .social-links a {
     color: var(--text-primary);
-    font-size: 1.8rem; /* Aumentado */
+    font-size: 1.8rem;
     transition: transform 0.2s, color 0.2s;
 }
 
@@ -110,7 +165,7 @@ h2 {
 }
 
 .section-title {
-    font-size: 2rem; /* Aumentado */
+    font-size: 2rem;
     margin-bottom: 3rem;
     color: var(--accent-color);
     text-transform: uppercase;
@@ -120,14 +175,15 @@ h2 {
 
 .skills-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 colunas fixas */
+    grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
     max-width: 900px;
     margin: 0 auto;
 }
 
 .skill-item {
-    background-color: var(--card-bg);
+    background-color: rgba(26, 24, 23, 0.8); /* Leve transparência para ver o fundo */
+    backdrop-filter: blur(5px); /* Efeito de vidro fosco */
     padding: 2rem;
     border-radius: 16px;
     display: flex;
@@ -145,7 +201,7 @@ h2 {
 }
 
 .skill-item i {
-    font-size: 4.5rem; /* Ícones bem maiores */
+    font-size: 4.5rem;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
@@ -164,7 +220,8 @@ h2 {
 }
 
 .project-card {
-    background-color: var(--card-bg);
+    background-color: rgba(26, 24, 23, 0.8); /* Leve transparência */
+    backdrop-filter: blur(5px);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 2.5rem;
@@ -180,7 +237,7 @@ h2 {
 }
 
 .project-title {
-    font-size: 1.6rem; /* Aumentado */
+    font-size: 1.6rem;
     margin-bottom: 1rem;
     color: var(--text-primary);
 }
@@ -351,7 +408,7 @@ input:focus, textarea:focus {
 /* --- Responsive --- */
 @media (max-width: 900px) {
     .skills-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 colunas em tablets/mobile */
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, make_response
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 from functools import wraps
@@ -27,7 +27,7 @@ def get_db_connection():
     conn = psycopg2.connect(url)
     return conn
 
-# --- Rota para servir a imagem do banco ---
+# --- Rota para servir a imagem do banco com CACHE ---
 @app.route('/profile_image')
 def profile_image():
     conn = get_db_connection()
@@ -35,20 +35,29 @@ def profile_image():
     try:
         cur.execute("SELECT avatar_data FROM portifolio_profile LIMIT 1")
         record = cur.fetchone()
+        
         if record and record[0]:
-            return send_file(
+            # Cria a resposta com o arquivo
+            response = make_response(send_file(
                 io.BytesIO(record[0]),
                 mimetype='image/jpeg',
                 as_attachment=False,
                 download_name='profile.jpg'
-            )
+            ))
+            
+            # Adiciona cabeçalhos de Cache
+            # public: pode ser cacheado por qualquer um
+            # max-age=86400: válido por 24 horas (86400 segundos)
+            response.headers['Cache-Control'] = 'public, max-age=86400'
+            return response
+            
     except Exception as e:
         print(f"Erro ao buscar imagem: {e}")
     finally:
         cur.close()
         conn.close()
     
-    # Se não tiver imagem no banco, redireciona para a padrão estática
+    # Se falhar, redireciona para a estática (também cacheada pelo navegador por padrão)
     return redirect(url_for('static', filename='yo.jpg'))
 
 # --- Rota Pública ---

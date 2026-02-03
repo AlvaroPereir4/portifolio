@@ -7,8 +7,58 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    
+    <style>
+        /* Estilos para o Modal de Recorte */
+        .crop-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .crop-modal-content {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid var(--border-color);
+        }
+        .crop-modal-content img {
+            max-width: 100%;
+        }
+        .crop-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+    </style>
 </head>
 <body>
+    <!-- Modal de Recorte -->
+    <div id="crop-modal" class="crop-modal">
+        <div class="crop-modal-content">
+            <h3 style="color: var(--accent-color); margin-bottom: 1rem;">Ajustar Imagem</h3>
+            <div>
+                <img id="image-to-crop">
+            </div>
+            <div class="crop-buttons">
+                <button id="crop-button" class="btn">Recortar e Usar</button>
+                <button id="cancel-crop-button" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="admin-header">
             <h1>Painel de Controle</h1>
@@ -29,7 +79,7 @@
         <!-- Gerenciar Perfil -->
         <div class="admin-section">
             <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Editar Perfil</h2>
-            <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem;">
+            <form id="profile-form" action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
                     <div>
                         <label>Nome</label>
@@ -45,17 +95,16 @@
                     <textarea name="bio" rows="3" required>{{ profile.bio if profile else '' }}</textarea>
                 </div>
                 
-                <!-- Campo de Upload de Imagem -->
                 <div class="form-group" style="background-color: var(--input-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
                     <label style="margin-bottom: 0.5rem;">Foto de Perfil</label>
                     
                     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        <img src="{{ url_for('profile_image') }}" 
+                        <img id="avatar-preview" src="{{ url_for('profile_image') }}" 
                              alt="Atual" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color);">
                         <span style="color: var(--text-secondary); font-size: 0.9rem;">Imagem atual</span>
                     </div>
 
-                    <div style="display: grid; gap: 0.5rem;">
+                    <div>
                         <label for="avatar_file" style="font-size: 0.9rem; color: var(--text-secondary);">Fazer upload de nova imagem:</label>
                         <input type="file" name="avatar_file" id="avatar_file" accept="image/*" style="background-color: transparent; border: none; padding-left: 0;">
                     </div>
@@ -143,5 +192,80 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Cropper.js JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('avatar_file');
+            const modal = document.getElementById('crop-modal');
+            const imageToCrop = document.getElementById('image-to-crop');
+            const cropButton = document.getElementById('crop-button');
+            const cancelCropButton = document.getElementById('cancel-crop-button');
+            const avatarPreview = document.getElementById('avatar-preview');
+            let cropper;
+
+            // 1. Abrir o modal quando um arquivo é selecionado
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        imageToCrop.src = reader.result;
+                        modal.style.display = 'flex';
+                        
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        
+                        // 2. Iniciar o Cropper.js
+                        cropper = new Cropper(imageToCrop, {
+                            aspectRatio: 1 / 1, // Trava em formato quadrado
+                            viewMode: 1,
+                            background: false,
+                        });
+                    };
+                    reader.readAsDataURL(files[0]);
+                }
+            });
+
+            // 3. Processar o recorte
+            cropButton.addEventListener('click', () => {
+                if (!cropper) return;
+
+                const canvas = cropper.getCroppedCanvas({
+                    width: 512, // Define a resolução final da imagem
+                    height: 512,
+                });
+
+                // Converte o canvas recortado para um arquivo (Blob)
+                canvas.toBlob((blob) => {
+                    // Cria um novo arquivo a partir do blob
+                    const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+
+                    // Simula um upload de arquivo para o input original
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    fileInput.files = dataTransfer.files;
+
+                    // Atualiza a miniatura na página
+                    avatarPreview.src = URL.createObjectURL(croppedFile);
+
+                    // Fecha o modal
+                    modal.style.display = 'none';
+                    cropper.destroy();
+                }, 'image/jpeg');
+            });
+
+            // 4. Cancelar
+            cancelCropButton.addEventListener('click', () => {
+                modal.style.display = 'none';
+                if (cropper) {
+                    cropper.destroy();
+                }
+                fileInput.value = ''; // Limpa a seleção do arquivo
+            });
+        });
+    </script>
 </body>
 </html>
