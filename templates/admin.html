@@ -8,11 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Cropper.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     
     <style>
-        /* Estilos para o Modal de Recorte */
         .crop-modal {
             display: none;
             position: fixed;
@@ -45,7 +43,6 @@
     </style>
 </head>
 <body>
-    <!-- Modal de Recorte -->
     <div id="crop-modal" class="crop-modal">
         <div class="crop-modal-content">
             <h3 style="color: var(--accent-color); margin-bottom: 1rem;">Ajustar Imagem</h3>
@@ -76,7 +73,6 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Gerenciar Perfil -->
         <div class="admin-section">
             <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Editar Perfil</h2>
             <form id="profile-form" action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem;">
@@ -128,7 +124,6 @@
             </form>
         </div>
 
-        <!-- Adicionar Projeto -->
         <div class="admin-section">
             <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Novo Projeto</h2>
             <form action="{{ url_for('add_project') }}" method="POST" style="margin-top: 1.5rem;">
@@ -158,7 +153,6 @@
             </form>
         </div>
 
-        <!-- Lista de Projetos -->
         <div class="admin-section">
             <h2 style="color: var(--accent-color);">Projetos Cadastrados</h2>
             {% if projects %}
@@ -193,7 +187,6 @@
         </div>
     </div>
 
-    <!-- Cropper.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -205,7 +198,6 @@
             const avatarPreview = document.getElementById('avatar-preview');
             let cropper;
 
-            // 1. Abrir o modal quando um arquivo é selecionado
             fileInput.addEventListener('change', (e) => {
                 const files = e.target.files;
                 if (files && files.length > 0) {
@@ -218,9 +210,8 @@
                             cropper.destroy();
                         }
                         
-                        // 2. Iniciar o Cropper.js
                         cropper = new Cropper(imageToCrop, {
-                            aspectRatio: 1 / 1, // Trava em formato quadrado
+                            aspectRatio: 1 / 1,
                             viewMode: 1,
                             background: false,
                         });
@@ -229,41 +220,34 @@
                 }
             });
 
-            // 3. Processar o recorte
             cropButton.addEventListener('click', () => {
                 if (!cropper) return;
 
                 const canvas = cropper.getCroppedCanvas({
-                    width: 512, // Define a resolução final da imagem
+                    width: 512,
                     height: 512,
                 });
 
-                // Converte o canvas recortado para um arquivo (Blob)
                 canvas.toBlob((blob) => {
-                    // Cria um novo arquivo a partir do blob
                     const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
 
-                    // Simula um upload de arquivo para o input original
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(croppedFile);
                     fileInput.files = dataTransfer.files;
 
-                    // Atualiza a miniatura na página
                     avatarPreview.src = URL.createObjectURL(croppedFile);
 
-                    // Fecha o modal
                     modal.style.display = 'none';
                     cropper.destroy();
                 }, 'image/jpeg');
             });
 
-            // 4. Cancelar
             cancelCropButton.addEventListener('click', () => {
                 modal.style.display = 'none';
                 if (cropper) {
                     cropper.destroy();
                 }
-                fileInput.value = ''; // Limpa a seleção do arquivo
+                fileInput.value = '';
             });
         });
     </script>

@@ -9,9 +9,8 @@ import io
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'chave_secreta_super_segura' 
+app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_default')
 
-# --- Decorator para proteger rotas ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -23,11 +22,10 @@ def login_required(f):
 def get_db_connection():
     url = os.environ.get('SUPABASE_URL') or os.environ.get('DATABASE_URL')
     if not url:
-        raise ValueError("Nenhuma URL de banco de dados encontrada no .env")
+        raise ValueError("Database URL not found")
     conn = psycopg2.connect(url)
     return conn
 
-# --- Rota para servir a imagem do banco com CACHE ---
 @app.route('/profile_image')
 def profile_image():
     conn = get_db_connection()
@@ -37,36 +35,28 @@ def profile_image():
         record = cur.fetchone()
         
         if record and record[0]:
-            # Cria a resposta com o arquivo
             response = make_response(send_file(
                 io.BytesIO(record[0]),
                 mimetype='image/jpeg',
                 as_attachment=False,
                 download_name='profile.jpg'
             ))
-            
-            # Adiciona cabeçalhos de Cache
-            # public: pode ser cacheado por qualquer um
-            # max-age=86400: válido por 24 horas (86400 segundos)
             response.headers['Cache-Control'] = 'public, max-age=86400'
             return response
             
-    except Exception as e:
-        print(f"Erro ao buscar imagem: {e}")
+    except Exception:
+        pass
     finally:
         cur.close()
         conn.close()
     
-    # Se falhar, redireciona para a estática (também cacheada pelo navegador por padrão)
     return redirect(url_for('static', filename='yo.jpg'))
 
-# --- Rota Pública ---
 @app.route('/')
 def index():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
-    # Busca perfil (sem carregar o binário pesado da imagem aqui)
     cur.execute('SELECT id, name, role, bio, avatar_url, github_link, linkedin_link, resume_link FROM portifolio_profile LIMIT 1')
     profile = cur.fetchone()
     
@@ -78,7 +68,6 @@ def index():
     
     return render_template('index.html', profile=profile, projects=projects)
 
-# --- Autenticação ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -97,8 +86,6 @@ def login():
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('index'))
-
-# --- Rotas de Admin (Protegidas) ---
 
 @app.route('/admin')
 @login_required
@@ -130,13 +117,11 @@ def update_profile():
         cur.execute("SELECT id FROM portifolio_profile LIMIT 1")
         exists = cur.fetchone()
         
-        # Prepara os dados binários da imagem se houver upload
         image_data = None
         if file and file.filename:
             image_data = file.read()
 
         if exists:
-            # Update
             query = """
                 UPDATE portifolio_profile
                 SET name=%s, role=%s, bio=%s, github_link=%s, linkedin_link=%s, resume_link=%s
@@ -144,7 +129,6 @@ def update_profile():
             params = [data['name'], data['role'], data['bio'], 
                       data['github_link'], data['linkedin_link'], data['resume_link']]
             
-            # Se tiver nova imagem, atualiza o campo binário
             if image_data:
                 query += ", avatar_data=%s"
                 params.append(image_data)
@@ -154,7 +138,6 @@ def update_profile():
             
             cur.execute(query, tuple(params))
         else:
-            # Insert
             cur.execute("""
                 INSERT INTO portifolio_profile (name, role, bio, avatar_data, github_link, linkedin_link, resume_link)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -165,7 +148,7 @@ def update_profile():
         flash('Perfil atualizado!', 'success')
     except Exception as e:
         conn.rollback()
-        flash(f'Erro: {e}', 'error')
+        flash(f'Erro: {str(e)}', 'error')
     finally:
         conn.close()
         
@@ -188,7 +171,7 @@ def add_project():
         flash('Projeto adicionado!', 'success')
     except Exception as e:
         conn.rollback()
-        flash(f'Erro: {e}', 'error')
+        flash(f'Erro: {str(e)}', 'error')
     finally:
         conn.close()
         
@@ -214,7 +197,7 @@ def edit_project(id):
             return redirect(url_for('admin_dashboard'))
         except Exception as e:
             conn.rollback()
-            flash(f'Erro: {e}', 'error')
+            flash(f'Erro: {str(e)}', 'error')
         finally:
             conn.close()
     
@@ -239,7 +222,7 @@ def delete_project(id):
         flash('Projeto excluído.', 'success')
     except Exception as e:
         conn.rollback()
-        flash(f'Erro: {e}', 'error')
+        flash(f'Erro: {str(e)}', 'error')
     finally:
         conn.close()
         
