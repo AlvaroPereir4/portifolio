@@ -1,202 +1,370 @@
-body {
-    font-family: sans-serif;
+:root {
+    /* Fundos */
+    --bg-color: #0c0b0b;
+    --card-bg: #1a1817;
+    --input-bg: #252220;
+    
+    /* Textos */
+    --text-primary: #e6e1de;
+    --text-secondary: #8f8681;
+    
+    /* Destaques */
+    --accent-color: #e87c03;
+    --accent-hover: #ff9838;
+    
+    /* Bordas */
+    --border-color: #33302e;
+}
+
+* {
+    box-sizing: border-box;
     margin: 0;
-    background-color: #121212;
-    color: #e0e0e0;
+    padding: 0;
 }
 
-header {
-    background-color: #1f1f1f;
-    color: #fff;
-    padding: 1rem 0;
-    text-align: center;
-    border-bottom: 1px solid #333;
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 18px; /* Aumentado fonte base */
 }
-
-header h3 {
-    margin-bottom: 1rem;
-}
-
-#habilidades-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 2rem;
-}
-
-.habilidade {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.habilidade i {
-    font-size: 3rem;
-    color: #61dafb;
-}
-
-.habilidade span {
-    font-size: 0.9rem;
-}
-
-main {
-    display: flex;
-    justify-content: center; /* Centraliza o conteúdo principal */
-    padding: 2rem;
-}
-
-#container {
-    display: flex;
-    width: 100%;
-    max-width: 1200px;
-}
-
-#sobre {
-    flex: 1;
-    margin-right: 2rem;
-    background-color: #1e1e1e;
-    padding: 1.5rem;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-#sobre img {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 1rem;
-    border: 3px solid #61dafb;
-}
-
-#personal-links {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-#personal-links a {
-    color: #e0e0e0;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-#personal-links a:hover {
-    color: #61dafb;
-}
-
-#personal-links i {
-    font-size: 1.2rem;
-}
-
-#projetos {
-    flex: 2;
-    background-color: #1e1e1e;
-    padding: 1.5rem;
-    border-radius: 8px;
-}
-
-.projeto {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #333;
-}
-
-.projeto-links {
-    display: flex;
-    gap: 1.5rem;
-    margin-top: 0.5rem;
-}
-
-.projeto:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-h1, h2, h3 {
-    color: #fff;
-}
-
-h1 {
-    font-size: 2.2rem;
-}
-
-h2 {
-    font-size: 1.5rem;
-}
-
-h3 {
-    font-size: 1.2rem;
-}
-
 
 a {
+    color: var(--accent-color);
     text-decoration: none;
-    color: #61dafb; /* Um azul claro para destaque */
-    font-weight: bold;
+    transition: color 0.2s;
 }
 
 a:hover {
-    color: #fff;
-    text-decoration: underline;
+    color: var(--accent-hover);
 }
 
-/* --- Media Query for Responsiveness --- */
+/* --- Layout --- */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* --- Header / Hero --- */
+header {
+    text-align: center;
+    padding: 5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 4rem;
+}
+
+.profile-img {
+    width: 180px; /* Aumentado */
+    height: 180px; /* Aumentado */
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--accent-color);
+    margin-bottom: 2rem;
+    box-shadow: 0 0 30px rgba(232, 124, 3, 0.25);
+}
+
+h1 {
+    font-size: 3.5rem; /* Aumentado */
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 1.5rem; /* Aumentado */
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 2rem;
+}
+
+.bio {
+    max-width: 700px;
+    margin: 0 auto 2.5rem;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.social-links a {
+    color: var(--text-primary);
+    font-size: 1.8rem; /* Aumentado */
+    transition: transform 0.2s, color 0.2s;
+}
+
+.social-links a:hover {
+    color: var(--accent-color);
+    transform: translateY(-3px);
+}
+
+/* --- Skills --- */
+.skills-section {
+    margin-bottom: 5rem;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 2rem; /* Aumentado */
+    margin-bottom: 3rem;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-weight: 700;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 colunas fixas */
+    gap: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.skill-item {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, border-color 0.2s;
+    width: 100%;
+}
+
+.skill-item:hover {
+    transform: translateY(-8px);
+    border-color: var(--accent-color);
+}
+
+.skill-item i {
+    font-size: 4.5rem; /* Ícones bem maiores */
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.skill-item span {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* --- Projects --- */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2.5rem;
+}
+
+.project-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.project-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    border-color: var(--accent-color);
+}
+
+.project-title {
+    font-size: 1.6rem; /* Aumentado */
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.project-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+}
+
+.project-links {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.project-links a {
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+/* --- Admin / Login Forms --- */
+.login-container {
+    max-width: 450px;
+    margin: 120px auto;
+    padding: 3rem;
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.form-group {
+    margin-bottom: 1.8rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.8rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="url"],
+textarea {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.btn {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: #fff;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    width: 100%;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+    background-color: transparent;
+}
+
+.btn-danger {
+    background-color: #d32f2f;
+}
+
+.btn-danger:hover {
+    background-color: #b71c1c;
+}
+
+/* --- Admin Dashboard --- */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-section {
+    background-color: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border-color);
+}
+
+.project-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+}
+
+.project-table th, 
+.project-table td {
+    text-align: left;
+    padding: 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.project-table th {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    width: auto;
+}
+
+/* --- Flash Messages --- */
+.flash {
+    padding: 1.2rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 500;
+}
+.flash.success { background-color: rgba(76, 175, 80, 0.1); border: 1px solid #4caf50; color: #4caf50; }
+.flash.error { background-color: rgba(244, 67, 54, 0.1); border: 1px solid #f44336; color: #f44336; }
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    .skills-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 colunas em tablets/mobile */
+    }
+}
+
 @media (max-width: 768px) {
-    main {
-        padding: 1rem;
+    .projects-grid {
+        grid-template-columns: 1fr;
     }
-
-    #container {
+    
+    .admin-header {
         flex-direction: column;
-    }
-
-    #sobre {
-        margin-right: 0;
-        margin-bottom: 2rem;
-    }
-
-    #sobre img {
-        width: 120px;
-        height: 120px;
-    }
-
-    #personal-links {
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    #habilidades-container {
         gap: 1.5rem;
+        text-align: center;
     }
-
-    .habilidade i {
-        font-size: 2.5rem;
-    }
-
-    h1 {
-        font-size: 1.8rem;
-    }
-
-    h2 {
-        font-size: 1.3rem;
-    }
-
-    h3 {
-        font-size: 1.1rem;
-    }
-
-    p, .projeto a {
-        font-size: 0.9rem;
-    }
+    
+    h1 { font-size: 2.5rem; }
 }
