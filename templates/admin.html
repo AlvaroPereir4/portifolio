@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    
+    <style>
+        .crop-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .crop-modal-content {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid var(--border-color);
+        }
+        .crop-modal-content img {
+            max-width: 100%;
+        }
+        .crop-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="crop-modal" class="crop-modal">
+        <div class="crop-modal-content">
+            <h3 style="color: var(--accent-color); margin-bottom: 1rem;">Ajustar Imagem</h3>
+            <div>
+                <img id="image-to-crop">
+            </div>
+            <div class="crop-buttons">
+                <button id="crop-button" class="btn">Recortar e Usar</button>
+                <button id="cancel-crop-button" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="admin-header">
+            <h1>Painel de Controle</h1>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <a href="{{ url_for('index') }}" target="_blank" class="btn btn-secondary">Ver Site</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">Sair</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="admin-section">
+            <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Editar Perfil</h2>
+            <form id="profile-form" action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
+                    <div>
+                        <label>Nome</label>
+                        <input type="text" name="name" value="{{ profile.name if profile else '' }}" required>
+                    </div>
+                    <div>
+                        <label>Cargo / Função</label>
+                        <input type="text" name="role" value="{{ profile.role if profile else '' }}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bio (Resumo)</label>
+                    <textarea name="bio" rows="3" required>{{ profile.bio if profile else '' }}</textarea>
+                </div>
+                
+                <div class="form-group" style="background-color: var(--input-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <label style="margin-bottom: 0.5rem;">Foto de Perfil</label>
+                    
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <img id="avatar-preview" src="{{ url_for('profile_image') }}" 
+                             alt="Atual" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color);">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Imagem atual</span>
+                    </div>
+
+                    <div>
+                        <label for="avatar_file" style="font-size: 0.9rem; color: var(--text-secondary);">Fazer upload de nova imagem:</label>
+                        <input type="file" name="avatar_file" id="avatar_file" accept="image/*" style="background-color: transparent; border: none; padding-left: 0;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label><i class="fab fa-github"></i> GitHub</label>
+                        <input type="url" name="github_link" value="{{ profile.github_link if profile else '' }}">
+                    </div>
+                    <div>
+                        <label><i class="fab fa-linkedin"></i> LinkedIn</label>
+                        <input type="url" name="linkedin_link" value="{{ profile.linkedin_link if profile else '' }}">
+                    </div>
+                    <div>
+                        <label><i class="fas fa-file-alt"></i> Currículo</label>
+                        <input type="url" name="resume_link" value="{{ profile.resume_link if profile else '' }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Salvar Alterações do Perfil</button>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Novo Projeto</h2>
+            <form action="{{ url_for('add_project') }}" method="POST" style="margin-top: 1.5rem;">
+                <div class="form-group">
+                    <label>Título do Projeto</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea name="description" rows="3" required></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label>GitHub Link</label>
+                        <input type="url" name="github_link">
+                    </div>
+                    <div>
+                        <label>Deploy Link</label>
+                        <input type="url" name="project_link">
+                    </div>
+                    <div>
+                        <label>Doc Link</label>
+                        <input type="url" name="doc_link">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Adicionar Projeto</button>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h2 style="color: var(--accent-color);">Projetos Cadastrados</h2>
+            {% if projects %}
+            <table class="project-table">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Resumo</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in projects %}
+                    <tr>
+                        <td><strong>{{ p.title }}</strong></td>
+                        <td style="font-size: 0.9rem;">{{ p.description[:60] }}...</td>
+                        <td style="text-align: right;">
+                            <div class="action-buttons" style="justify-content: flex-end;">
+                                <a href="{{ url_for('edit_project', id=p.id) }}" class="btn btn-secondary btn-sm"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('delete_project', id=p.id) }}" method="POST" onsubmit="return confirm('Excluir este projeto permanentemente?');" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="margin-top: 1rem; color: var(--text-secondary);">Nenhum projeto encontrado.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('avatar_file');
+            const modal = document.getElementById('crop-modal');
+            const imageToCrop = document.getElementById('image-to-crop');
+            const cropButton = document.getElementById('crop-button');
+            const cancelCropButton = document.getElementById('cancel-crop-button');
+            const avatarPreview = document.getElementById('avatar-preview');
+            let cropper;
+
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        imageToCrop.src = reader.result;
+                        modal.style.display = 'flex';
+                        
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        
+                        cropper = new Cropper(imageToCrop, {
+                            aspectRatio: 1 / 1,
+                            viewMode: 1,
+                            background: false,
+                        });
+                    };
+                    reader.readAsDataURL(files[0]);
+                }
+            });
+
+            cropButton.addEventListener('click', () => {
+                if (!cropper) return;
+
+                const canvas = cropper.getCroppedCanvas({
+                    width: 512,
+                    height: 512,
+                });
+
+                canvas.toBlob((blob) => {
+                    const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    fileInput.files = dataTransfer.files;
+
+                    avatarPreview.src = URL.createObjectURL(croppedFile);
+
+                    modal.style.display = 'none';
+                    cropper.destroy();
+                }, 'image/jpeg');
+            });
+
+            cancelCropButton.addEventListener('click', () => {
+                modal.style.display = 'none';
+                if (cropper) {
+                    cropper.destroy();
+                }
+                fileInput.value = '';
+            });
+        });
+    </script>
+</body>
+</html>

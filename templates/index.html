@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfólio | {{ profile.name if profile else 'Dev' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <header>
+            {% if profile %}
+                <div class="profile-img-container">
+                    <img src="{{ url_for('profile_image') }}" 
+                         alt="Foto de Perfil" 
+                         class="profile-img"
+                         onload="this.classList.add('loaded')">
+                </div>
+                
+                <h1>{{ profile.name }}</h1>
+                <h2>{{ profile.role }}</h2>
+                <p class="bio">{{ profile.bio }}</p>
+                
+                <div class="social-links">
+                    {% if profile.github_link %}
+                    <a href="{{ profile.github_link }}" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                    {% endif %}
+                    {% if profile.linkedin_link %}
+                    <a href="{{ profile.linkedin_link }}" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    {% endif %}
+                    {% if profile.resume_link %}
+                    <a href="{{ profile.resume_link }}" target="_blank" title="Currículo"><i class="fas fa-file-alt"></i></a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p>Perfil não configurado.</p>
+            {% endif %}
+        </header>
+
+        <section class="skills-section">
+            <h3 class="section-title">Tech Stack</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <i class="devicon-python-plain"></i>
+                    <span>Python</span>
+                </div>
+                <div class="skill-item">
+                    <i class="fas fa-robot"></i>
+                    <span>Automação</span>
+                </div>
+                <div class="skill-item">
+                    <i class="fas fa-spider"></i>
+                    <span>Web Scraping</span>
+                </div>
+                <div class="skill-item">
+                    <i class="fas fa-network-wired"></i>
+                    <span>APIs</span>
+                </div>
+                <div class="skill-item">
+                    <i class="devicon-mongodb-plain"></i>
+                    <span>MongoDB</span>
+                </div>
+                <div class="skill-item">
+                    <i class="devicon-git-plain"></i>
+                    <span>Git</span>
+                </div>
+                <div class="skill-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security</span>
+                </div>
+                <div class="skill-item">
+                    <i class="devicon-postgresql-plain"></i>
+                    <span>PostgreSQL</span>
+                </div>
+                <div class="skill-item">
+                    <i class="devicon-html5-plain"></i>
+                    <span>HTML5</span>
+                </div>
+                <div class="skill-item">
+                    <i class="devicon-css3-plain"></i>
+                    <span>CSS3</span>
+                </div>
+                <div class="skill-item">
+                    <i class="devicon-javascript-plain"></i>
+                    <span>JavaScript</span>
+                </div>
+                <div class="skill-item">
+                    <i class="devicon-flask-original"></i>
+                    <span>Flask</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="projetos">
+            <h3 class="section-title">Projetos Selecionados</h3>
+            <div class="projects-grid">
+                {% if projects %}
+                    {% for projeto in projects %}
+                    <div class="project-card">
+                        <h4 class="project-title">{{ projeto.title }}</h4>
+                        <p class="project-desc">{{ projeto.description }}</p>
+                        <div class="project-links">
+                            {% if projeto.github_link %}
+                            <a href="{{ projeto.github_link }}" target="_blank"><i class="fab fa-github"></i> Code</a>
+                            {% endif %}
+                            {% if projeto.project_link %}
+                            <a href="{{ projeto.project_link }}" target="_blank"><i class="fas fa-external-link-alt"></i> Live Demo</a>
+                            {% endif %}
+                            {% if projeto.doc_link %}
+                            <a href="{{ projeto.doc_link }}" target="_blank"><i class="fas fa-book"></i> Docs</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="text-align: center; color: var(--text-secondary);">Nenhum projeto publicado ainda.</p>
+                {% endif %}
+            </div>
+        </section>
+        
+        <footer style="text-align: center; margin-top: 5rem; color: var(--text-secondary); font-size: 0.9rem; padding-bottom: 2rem;">
+            <p>
+                Sendo desenvolvido em 
+                <a href="https://github.com/AlvaroPereir4/portifolio" target="_blank" style="color: var(--accent-color); font-weight: 600; margin-left: 4px;">
+                    <i class="fab fa-github"></i> AlvaroPereir4/portifolio
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        
+        const particleCount = 70;
+        const connectionDistance = 150; 
+        const mouseDistance = 200;
+        const moveSpeed = 0.5; 
+        
+        const colorR = 232;
+        const colorG = 124;
+        const colorB = 3;
+
+        let mouse = {
+            x: null,
+            y: null
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * moveSpeed;
+                this.vy = (Math.random() - 0.5) * moveSpeed;
+                this.size = Math.random() * 2 + 1;
+                this.baseX = this.x;
+                this.baseY = this.y;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < mouseDistance) {
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const force = (mouseDistance - distance) / mouseDistance;
+                        const directionX = forceDirectionX * force * 2;
+                        const directionY = forceDirectionY * force * 2;
+
+                        this.x += directionX;
+                        this.y += directionY;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${colorR}, ${colorG}, ${colorB}, 0.5)`;
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    let dx = p.x - p2.x;
+                    let dy = p.y - p2.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(${colorR}, ${colorG}, ${colorB}, ${1 - distance / connectionDistance})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+
+                if (mouse.x != null) {
+                    let dx = p.x - mouse.x;
+                    let dy = p.y - mouse.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < mouseDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(${colorR}, ${colorG}, ${colorB}, ${1 - distance / mouseDistance})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            init();
+        });
+
+        resize();
+        init();
+        animate();
+    </script>
+</body>
+</html>

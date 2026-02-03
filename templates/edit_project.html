@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Projeto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container" style="max-width: 800px;">
+        <h1 style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 2rem;">Editar Projeto</h1>
+        
+        <div class="admin-section">
+            <form method="POST">
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" name="title" value="{{ project.title }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea name="description" rows="5" required>{{ project.description }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>GitHub Link</label>
+                    <input type="url" name="github_link" value="{{ project.github_link or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Deploy Link</label>
+                    <input type="url" name="project_link" value="{{ project.project_link or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Doc Link</label>
+                    <input type="url" name="doc_link" value="{{ project.doc_link or '' }}">
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn">Salvar Alterações</button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
