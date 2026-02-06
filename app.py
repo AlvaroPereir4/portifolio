@@ -68,6 +68,22 @@ def index():
     
     return render_template('index.html', profile=profile, projects=projects)
 
+@app.route('/project/<int:id>')
+def project_details(id):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    cur.execute('SELECT * FROM portifolio_projects WHERE id = %s', (id,))
+    project = cur.fetchone()
+    
+    cur.close()
+    conn.close()
+    
+    if not project:
+        return redirect(url_for('index'))
+        
+    return render_template('project_details.html', project=project)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
