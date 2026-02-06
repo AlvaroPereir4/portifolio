@@ -27,18 +27,69 @@
             border: 1px solid var(--border-color);
             margin-bottom: 3rem;
         }
+        
+        /* Estilos para Markdown Renderizado */
         .project-description {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--text-primary);
             line-height: 1.8;
-            white-space: pre-wrap; /* Mantém quebras de linha do banco */
         }
+        .project-description h1, 
+        .project-description h2, 
+        .project-description h3 {
+            color: var(--accent-color);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .project-description p {
+            margin-bottom: 1rem;
+        }
+        .project-description code {
+            background-color: #2d2d2d;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #e6e1de;
+        }
+        .project-description pre {
+            background-color: #1e1e1e;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+            border: 1px solid #333;
+        }
+        .project-description pre code {
+            background-color: transparent;
+            padding: 0;
+            color: #e6e1de;
+        }
+        .project-description ul, 
+        .project-description ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .project-description li {
+            margin-bottom: 0.5rem;
+        }
+        .project-description a {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+        .project-description img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
         .action-buttons {
             display: flex;
             justify-content: center;
             gap: 2rem;
             margin-top: 3rem;
             flex-wrap: wrap;
+            border-top: 1px solid var(--border-color);
+            padding-top: 2rem;
         }
         .action-btn {
             display: flex;
@@ -93,7 +144,8 @@
 
         <div class="project-content">
             <div class="project-description">
-                {{ project.description }}
+                <!-- Filtro 'markdown' aplicado aqui -->
+                {{ project.description | markdown | safe }}
             </div>
 
             <div class="action-buttons">

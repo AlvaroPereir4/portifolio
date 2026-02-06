@@ -1,15 +1,23 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, make_response, jsonify
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 from functools import wraps
 import io
+import requests
+import markdown
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_default')
+
+@app.template_filter('markdown')
+def render_markdown(text):
+    if not text:
+        return ""
+    return markdown.markdown(text, extensions=['fenced_code', 'tables'])
 
 def login_required(f):
     @wraps(f)
@@ -25,6 +33,30 @@ def get_db_connection():
         raise ValueError("Database URL not found")
     conn = psycopg2.connect(url)
     return conn
+
+def get_github_readme(github_url):
+    try:
+        if not github_url or 'github.com' not in github_url:
+            return None
+        
+        parts = github_url.rstrip('/').split('/')
+        if len(parts) < 2:
+            return None
+            
+        user = parts[-2]
+        repo = parts[-1]
+        
+        api_url = f"https://api.github.com/repos/{user}/{repo}/readme"
+        headers = {'Accept': 'application/vnd.github.v3.raw'}
+        
+        response = requests.get(api_url, headers=headers)
+        
+        if response.status_code == 200:
+            return response.text
+        return None
+    except Exception as e:
+        print(f"Error fetching README: {e}")
+        return None
 
 @app.route('/profile_image')
 def profile_image():
@@ -119,6 +151,22 @@ def admin_dashboard():
     conn.close()
     
     return render_template('admin.html', profile=profile, projects=projects)
+
+@app.route('/admin/fetch_readme', methods=['POST'])
+@login_required
+def fetch_readme():
+    data = request.get_json()
+    github_url = data.get('github_url')
+    
+    if not github_url:
+        return jsonify({'error': 'URL do GitHub não fornecida'}), 400
+        
+    readme_content = get_github_readme(github_url)
+    
+    if readme_content:
+        return jsonify({'content': readme_content})
+    else:
+        return jsonify({'error': 'Não foi possível encontrar o README. Verifique a URL e se o repositório é público.'}), 404
 
 @app.route('/admin/profile/update', methods=['POST'])
 @login_required
