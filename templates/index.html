@@ -43,55 +43,61 @@
         </header>
 
         <section class="skills-section">
-            <h3 class="section-title">Tech Stack</h3>
-            <div class="skills-grid">
-                <div class="skill-item">
-                    <i class="devicon-python-plain"></i>
-                    <span>Python</span>
-                </div>
-                <div class="skill-item">
-                    <i class="fas fa-robot"></i>
-                    <span>Automação</span>
-                </div>
-                <div class="skill-item">
-                    <i class="fas fa-spider"></i>
-                    <span>Web Scraping</span>
-                </div>
-                <div class="skill-item">
-                    <i class="fas fa-network-wired"></i>
-                    <span>APIs</span>
-                </div>
-                <div class="skill-item">
-                    <i class="devicon-mongodb-plain"></i>
-                    <span>MongoDB</span>
-                </div>
-                <div class="skill-item">
-                    <i class="devicon-git-plain"></i>
-                    <span>Git</span>
-                </div>
-                <div class="skill-item">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Security</span>
-                </div>
-                <div class="skill-item">
-                    <i class="devicon-postgresql-plain"></i>
-                    <span>PostgreSQL</span>
-                </div>
-                <div class="skill-item">
-                    <i class="devicon-html5-plain"></i>
-                    <span>HTML5</span>
-                </div>
-                <div class="skill-item">
-                    <i class="devicon-css3-plain"></i>
-                    <span>CSS3</span>
-                </div>
-                <div class="skill-item">
-                    <i class="devicon-javascript-plain"></i>
-                    <span>JavaScript</span>
-                </div>
-                <div class="skill-item">
-                    <i class="devicon-flask-original"></i>
-                    <span>Flask</span>
+            <div class="section-header-clickable" onclick="toggleSkills()">
+                <h3 class="section-title">Tech Stack</h3>
+                <i id="skills-toggle-icon" class="fas fa-chevron-up toggle-icon"></i>
+            </div>
+            
+            <div id="skills-wrapper" class="skills-wrapper expanded">
+                <div class="skills-grid">
+                    <div class="skill-item">
+                        <i class="devicon-python-plain"></i>
+                        <span>Python</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="fas fa-robot"></i>
+                        <span>Automação</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="fas fa-spider"></i>
+                        <span>Web Scraping</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="fas fa-network-wired"></i>
+                        <span>APIs</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="devicon-mongodb-plain"></i>
+                        <span>MongoDB</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="devicon-git-plain"></i>
+                        <span>Git</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Security</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="devicon-postgresql-plain"></i>
+                        <span>PostgreSQL</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="devicon-html5-plain"></i>
+                        <span>HTML5</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="devicon-css3-plain"></i>
+                        <span>CSS3</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="devicon-javascript-plain"></i>
+                        <span>JavaScript</span>
+                    </div>
+                    <div class="skill-item">
+                        <i class="devicon-flask-original"></i>
+                        <span>Flask</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -134,5 +140,21 @@
     </div>
 
     <script src="{{ url_for('static', filename='bg-animation.js') }}"></script>
+    <script>
+        function toggleSkills() {
+            const wrapper = document.getElementById('skills-wrapper');
+            const icon = document.getElementById('skills-toggle-icon');
+            
+            if (wrapper.classList.contains('expanded')) {
+                wrapper.classList.remove('expanded');
+                wrapper.classList.add('collapsed');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                wrapper.classList.remove('collapsed');
+                wrapper.classList.add('expanded');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+    </script>
 </body>
 </html>
