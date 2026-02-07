@@ -7,6 +7,7 @@ from functools import wraps
 import io
 import requests
 import markdown
+import re
 
 load_dotenv()
 
@@ -34,6 +35,30 @@ def get_db_connection():
     conn = psycopg2.connect(url)
     return conn
 
+def fix_relative_images(markdown_text, user, repo, branch='main'):
+    """
+    Procura por imagens Markdown com caminhos relativos e converte para URLs absolutas do GitHub Raw.
+    Ex: ![Alt](img/foto.png) -> ![Alt](https://raw.githubusercontent.com/User/Repo/main/img/foto.png)
+    """
+    base_url = f"https://raw.githubusercontent.com/{user}/{repo}/{branch}/"
+    
+    def replace_link(match):
+        alt_text = match.group(1)
+        link = match.group(2)
+        
+        # Se já for um link completo (http/https), não mexe
+        if link.startswith('http://') or link.startswith('https://'):
+            return match.group(0)
+        
+        # Se for relativo, adiciona a base do GitHub
+        # Remove ./ do início se houver
+        clean_link = link.lstrip('./')
+        return f"![{alt_text}]({base_url}{clean_link})"
+
+    # Regex para encontrar imagens Markdown: ![alt](link)
+    pattern = r'!\[(.*?)\]\((.*?)\)'
+    return re.sub(pattern, replace_link, markdown_text)
+
 def get_github_readme(github_url):
     try:
         if not github_url or 'github.com' not in github_url:
@@ -46,13 +71,23 @@ def get_github_readme(github_url):
         user = parts[-2]
         repo = parts[-1]
         
-        api_url = f"https://api.github.com/repos/{user}/{repo}/readme"
+        # 1. Descobrir qual é a branch padrão (main ou master)
+        repo_api_url = f"https://api.github.com/repos/{user}/{repo}"
+        repo_data = requests.get(repo_api_url).json()
+        default_branch = repo_data.get('default_branch', 'main')
+        
+        # 2. Pegar o conteúdo do README
+        readme_api_url = f"https://api.github.com/repos/{user}/{repo}/readme"
         headers = {'Accept': 'application/vnd.github.v3.raw'}
         
-        response = requests.get(api_url, headers=headers)
+        response = requests.get(readme_api_url, headers=headers)
         
         if response.status_code == 200:
-            return response.text
+            raw_text = response.text
+            # 3. Corrigir links de imagens relativos
+            fixed_text = fix_relative_images(raw_text, user, repo, default_branch)
+            return fixed_text
+            
         return None
     except Exception as e:
         print(f"Error fetching README: {e}")
