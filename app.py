@@ -1,15 +1,24 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, make_response, jsonify
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 from functools import wraps
 import io
+import requests
+import markdown
+import re
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_default')
+
+@app.template_filter('markdown')
+def render_markdown(text):
+    if not text:
+        return ""
+    return markdown.markdown(text, extensions=['fenced_code', 'tables'])
 
 def login_required(f):
     @wraps(f)
@@ -25,6 +34,53 @@ def get_db_connection():
         raise ValueError("Database URL not found")
     conn = psycopg2.connect(url)
     return conn
+
+def fix_relative_images(markdown_text, user, repo, branch='main'):
+    base_url = f"https://raw.githubusercontent.com/{user}/{repo}/{branch}/"
+    
+    def replace_link(match):
+        alt_text = match.group(1)
+        link = match.group(2)
+        
+        if link.startswith('http://') or link.startswith('https://'):
+            return match.group(0)
+
+        clean_link = link.lstrip('./')
+        return f"![{alt_text}]({base_url}{clean_link})"
+
+    pattern = r'!\[(.*?)\]\((.*?)\)'
+    return re.sub(pattern, replace_link, markdown_text)
+
+def get_github_readme(github_url):
+    try:
+        if not github_url or 'github.com' not in github_url:
+            return None
+        
+        parts = github_url.rstrip('/').split('/')
+        if len(parts) < 2:
+            return None
+            
+        user = parts[-2]
+        repo = parts[-1]
+        
+        repo_api_url = f"https://api.github.com/repos/{user}/{repo}"
+        repo_data = requests.get(repo_api_url).json()
+        default_branch = repo_data.get('default_branch', 'main')
+        
+        readme_api_url = f"https://api.github.com/repos/{user}/{repo}/readme"
+        headers = {'Accept': 'application/vnd.github.v3.raw'}
+        
+        response = requests.get(readme_api_url, headers=headers)
+        
+        if response.status_code == 200:
+            raw_text = response.text
+            fixed_text = fix_relative_images(raw_text, user, repo, default_branch)
+            return fixed_text
+            
+        return None
+    except Exception as e:
+        print(f"Error fetching README: {e}")
+        return None
 
 @app.route('/profile_image')
 def profile_image():
@@ -68,6 +124,22 @@ def index():
     
     return render_template('index.html', profile=profile, projects=projects)
 
+@app.route('/project/<int:id>')
+def project_details(id):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    cur.execute('SELECT * FROM portifolio_projects WHERE id = %s', (id,))
+    project = cur.fetchone()
+    
+    cur.close()
+    conn.close()
+    
+    if not project:
+        return redirect(url_for('index'))
+        
+    return render_template('project_details.html', project=project)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -103,6 +175,22 @@ def admin_dashboard():
     conn.close()
     
     return render_template('admin.html', profile=profile, projects=projects)
+
+@app.route('/admin/fetch_readme', methods=['POST'])
+@login_required
+def fetch_readme():
+    data = request.get_json()
+    github_url = data.get('github_url')
+    
+    if not github_url:
+        return jsonify({'error': 'URL do GitHub não fornecida'}), 400
+        
+    readme_content = get_github_readme(github_url)
+    
+    if readme_content:
+        return jsonify({'content': readme_content})
+    else:
+        return jsonify({'error': 'Não foi possível encontrar o README. Verifique a URL e se o repositório é público.'}), 404
 
 @app.route('/admin/profile/update', methods=['POST'])
 @login_required
