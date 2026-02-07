@@ -4,13 +4,11 @@ const ctx = canvas.getContext('2d');
 let width, height;
 let particles = [];
 
-// Configurações
-const particleCount = 80; // Aumentado ligeiramente
+const particleCount = 80;
 const connectionDistance = 160; 
 const mouseDistance = 220;
 const moveSpeed = 0.6; 
 
-// Cor base (Laranja: #e87c03)
 const colorR = 232;
 const colorG = 124;
 const colorB = 3;
@@ -41,7 +39,7 @@ class Particle {
         this.y = Math.random() * height;
         this.vx = (Math.random() - 0.5) * moveSpeed;
         this.vy = (Math.random() - 0.5) * moveSpeed;
-        this.size = Math.random() * 2.5 + 1; // Tamanho ligeiramente maior
+        this.size = Math.random() * 2.5 + 1;
         this.baseX = this.x;
         this.baseY = this.y;
         this.pulseSpeed = Math.random() * 0.05 + 0.01;
@@ -52,7 +50,6 @@ class Particle {
         this.x += this.vx;
         this.y += this.vy;
 
-        // Efeito de pulsação no tamanho
         this.pulseAngle += this.pulseSpeed;
         const currentSize = this.size + Math.sin(this.pulseAngle) * 0.5;
 
@@ -68,7 +65,7 @@ class Particle {
                 const forceDirectionX = dx / distance;
                 const forceDirectionY = dy / distance;
                 const force = (mouseDistance - distance) / mouseDistance;
-                const directionX = forceDirectionX * force * 2.5; // Força um pouco maior
+                const directionX = forceDirectionX * force * 2.5;
                 const directionY = forceDirectionY * force * 2.5;
 
                 this.x += directionX;
@@ -110,9 +107,8 @@ function animate() {
 
             if (distance < connectionDistance) {
                 ctx.beginPath();
-                // Opacidade baseada na distância
                 const opacity = 1 - distance / connectionDistance;
-                ctx.strokeStyle = `rgba(${colorR}, ${colorG}, ${colorB}, ${opacity * 0.5})`; // Linhas um pouco mais sutis
+                ctx.strokeStyle = `rgba(${colorR}, ${colorG}, ${colorB}, ${opacity * 0.5})`;
                 ctx.lineWidth = 1;
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p2.x, p2.y);
