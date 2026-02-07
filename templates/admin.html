@@ -23,6 +23,7 @@
             background-color: rgba(0,0,0,0.8);
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(5px);
         }
         .crop-modal-content {
             background-color: var(--card-bg);
@@ -31,14 +32,17 @@
             width: 90%;
             max-width: 600px;
             border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
         .crop-modal-content img {
             max-width: 100%;
+            display: block;
         }
         .crop-buttons {
             display: flex;
             gap: 1rem;
             margin-top: 1.5rem;
+            justify-content: flex-end;
         }
         .import-btn {
             background-color: #24292e;
@@ -52,22 +56,41 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            transition: background-color 0.2s;
         }
         .import-btn:hover {
             background-color: #2f363d;
         }
+        
+        /* Ajustes específicos para o painel admin */
+        .admin-section {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .admin-section:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        input, textarea {
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(232, 124, 3, 0.2);
+        }
     </style>
 </head>
 <body>
+    <canvas id="bg-canvas"></canvas>
+
     <div id="crop-modal" class="crop-modal">
         <div class="crop-modal-content">
             <h3 style="color: var(--accent-color); margin-bottom: 1rem;">Ajustar Imagem</h3>
-            <div>
+            <div style="max-height: 400px; overflow: hidden;">
                 <img id="image-to-crop">
             </div>
             <div class="crop-buttons">
-                <button id="crop-button" class="btn">Recortar e Usar</button>
-                <button id="cancel-crop-button" class="btn btn-secondary">Cancelar</button>
+                <button id="cancel-crop-button" class="btn btn-secondary" style="width: auto;">Cancelar</button>
+                <button id="crop-button" class="btn" style="width: auto;">Recortar e Usar</button>
             </div>
         </div>
     </div>
@@ -90,8 +113,8 @@
         {% endwith %}
 
         <div class="admin-section">
-            <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Editar Perfil</h2>
-            <form id="profile-form" action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem;">
+            <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">Editar Perfil</h2>
+            <form id="profile-form" action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
                     <div>
                         <label>Nome</label>
@@ -107,18 +130,22 @@
                     <textarea name="bio" rows="3" required>{{ profile.bio if profile else '' }}</textarea>
                 </div>
                 
-                <div class="form-group" style="background-color: var(--input-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <label style="margin-bottom: 0.5rem;">Foto de Perfil</label>
+                <div class="form-group" style="background-color: var(--input-bg); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <label style="margin-bottom: 1rem; display: block;">Foto de Perfil</label>
                     
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        <img id="avatar-preview" src="{{ url_for('profile_image') }}" 
-                             alt="Atual" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color);">
-                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Imagem atual</span>
-                    </div>
-
-                    <div>
-                        <label for="avatar_file" style="font-size: 0.9rem; color: var(--text-secondary);">Fazer upload de nova imagem:</label>
-                        <input type="file" name="avatar_file" id="avatar_file" accept="image/*" style="background-color: transparent; border: none; padding-left: 0;">
+                    <div style="display: flex; align-items: center; gap: 2rem;">
+                        <div style="position: relative;">
+                            <img id="avatar-preview" src="{{ url_for('profile_image') }}" 
+                                 alt="Atual" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); box-shadow: 0 0 15px rgba(232, 124, 3, 0.3);">
+                        </div>
+                        
+                        <div style="flex-grow: 1;">
+                            <label for="avatar_file" class="btn btn-secondary" style="display: inline-block; width: auto; cursor: pointer; margin-bottom: 0;">
+                                <i class="fas fa-upload"></i> Escolher nova foto
+                            </label>
+                            <input type="file" name="avatar_file" id="avatar_file" accept="image/*" style="display: none;">
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">Recomendado: Imagem quadrada (1:1)</p>
+                        </div>
                     </div>
                 </div>
 
@@ -141,8 +168,8 @@
         </div>
 
         <div class="admin-section">
-            <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Novo Projeto</h2>
-            <form action="{{ url_for('add_project') }}" method="POST" style="margin-top: 1.5rem;">
+            <h2 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">Novo Projeto</h2>
+            <form action="{{ url_for('add_project') }}" method="POST">
                 <div class="form-group">
                     <label>Título do Projeto</label>
                     <input type="text" name="title" required>
@@ -165,12 +192,12 @@
 
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <label style="margin-bottom: 0;">Descrição</label>
+                        <label style="margin-bottom: 0;">Descrição (Markdown suportado)</label>
                         <button type="button" id="import-readme-btn" class="import-btn">
                             <i class="fab fa-github"></i> Importar README
                         </button>
                     </div>
-                    <textarea id="new_description" name="description" rows="5" required></textarea>
+                    <textarea id="new_description" name="description" rows="8" required style="font-family: monospace; font-size: 0.9rem;"></textarea>
                 </div>
 
                 <button type="submit" class="btn">Adicionar Projeto</button>
@@ -178,39 +205,45 @@
         </div>
 
         <div class="admin-section">
-            <h2 style="color: var(--accent-color);">Projetos Cadastrados</h2>
+            <h2 style="color: var(--accent-color); margin-bottom: 1.5rem;">Projetos Cadastrados</h2>
             {% if projects %}
-            <table class="project-table">
-                <thead>
-                    <tr>
-                        <th>Título</th>
-                        <th>Resumo</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in projects %}
-                    <tr>
-                        <td><strong>{{ p.title }}</strong></td>
-                        <td style="font-size: 0.9rem;">{{ p.description[:60] }}...</td>
-                        <td style="text-align: right;">
-                            <div class="action-buttons" style="justify-content: flex-end;">
-                                <a href="{{ url_for('edit_project', id=p.id) }}" class="btn btn-secondary btn-sm"><i class="fas fa-edit"></i></a>
-                                <form action="{{ url_for('delete_project', id=p.id) }}" method="POST" onsubmit="return confirm('Excluir este projeto permanentemente?');" style="display:inline;">
-                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div style="overflow-x: auto;">
+                <table class="project-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Título</th>
+                            <th style="width: 50%;">Resumo</th>
+                            <th style="width: 25%; text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in projects %}
+                        <tr>
+                            <td><strong>{{ p.title }}</strong></td>
+                            <td style="font-size: 0.9rem; color: var(--text-secondary);">{{ p.description | striptags | truncate(80) }}</td>
+                            <td style="text-align: right;">
+                                <div class="action-buttons" style="justify-content: flex-end;">
+                                    <a href="{{ url_for('edit_project', id=p.id) }}" class="btn btn-secondary btn-sm" title="Editar"><i class="fas fa-edit"></i></a>
+                                    <form action="{{ url_for('delete_project', id=p.id) }}" method="POST" onsubmit="return confirm('Excluir este projeto permanentemente?');" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-            <p style="margin-top: 1rem; color: var(--text-secondary);">Nenhum projeto encontrado.</p>
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary); border: 1px dashed var(--border-color); border-radius: 8px;">
+                <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>Nenhum projeto cadastrado ainda.</p>
+            </div>
             {% endif %}
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='bg-animation.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -231,89 +264,126 @@
                         imageToCrop.src = reader.result;
                         modal.style.display = 'flex';
                         
-                        if (cropper) {
-                            cropper.destroy();
-                        }
-                        
-                        cropper = new Cropper(imageToCrop, {
-                            aspectRatio: 1 / 1,
-                            viewMode: 1,
-                            background: false,
-                        });
+                        // Pequeno delay para garantir que a imagem carregou no DOM
+                        setTimeout(() => {
+                            if (cropper) {
+                                cropper.destroy();
+                            }
+                            
+                            cropper = new Cropper(imageToCrop, {
+                                aspectRatio: 1 / 1,
+                                viewMode: 1,
+                                background: false,
+                                autoCropArea: 0.8,
+                            });
+                        }, 100);
                     };
                     reader.readAsDataURL(files[0]);
                 }
             });
 
-            cropButton.addEventListener('click', () => {
+            cropButton.addEventListener('click', (e) => {
+                e.preventDefault(); // Previne comportamento padrão
                 if (!cropper) return;
 
                 const canvas = cropper.getCroppedCanvas({
                     width: 512,
                     height: 512,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
                 });
 
                 canvas.toBlob((blob) => {
+                    // Cria um novo arquivo a partir do blob
                     const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
 
+                    // Atualiza o input file com o novo arquivo
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(croppedFile);
                     fileInput.files = dataTransfer.files;
 
+                    // Atualiza o preview
                     avatarPreview.src = URL.createObjectURL(croppedFile);
 
+                    // Fecha modal e limpa
                     modal.style.display = 'none';
                     cropper.destroy();
-                }, 'image/jpeg');
+                    cropper = null;
+                }, 'image/jpeg', 0.9);
             });
 
-            cancelCropButton.addEventListener('click', () => {
+            cancelCropButton.addEventListener('click', (e) => {
+                e.preventDefault();
                 modal.style.display = 'none';
                 if (cropper) {
                     cropper.destroy();
+                    cropper = null;
                 }
-                fileInput.value = '';
+                fileInput.value = ''; // Limpa a seleção
             });
+            
+            // Fechar modal clicando fora
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                    if (cropper) {
+                        cropper.destroy();
+                        cropper = null;
+                    }
+                    fileInput.value = '';
+                }
+            }
 
             // --- Lógica de Importar README ---
             const importBtn = document.getElementById('import-readme-btn');
             const githubInput = document.getElementById('new_github_link');
             const descInput = document.getElementById('new_description');
 
-            importBtn.addEventListener('click', async () => {
-                const url = githubInput.value;
-                if (!url) {
-                    alert('Por favor, preencha o campo "GitHub Link" primeiro.');
-                    return;
-                }
-
-                importBtn.disabled = true;
-                importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
-
-                try {
-                    const response = await fetch('/admin/fetch_readme', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ github_url: url }),
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        descInput.value = data.content;
-                    } else {
-                        alert('Erro: ' + data.error);
+            if (importBtn) {
+                importBtn.addEventListener('click', async () => {
+                    const url = githubInput.value;
+                    if (!url) {
+                        alert('Por favor, preencha o campo "GitHub Link" primeiro.');
+                        githubInput.focus();
+                        return;
                     }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    alert('Erro ao conectar com o servidor.');
-                } finally {
-                    importBtn.disabled = false;
-                    importBtn.innerHTML = '<i class="fab fa-github"></i> Importar README';
-                }
-            });
+
+                    const originalText = importBtn.innerHTML;
+                    importBtn.disabled = true;
+                    importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
+
+                    try {
+                        const response = await fetch('/admin/fetch_readme', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ github_url: url }),
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            descInput.value = data.content;
+                            // Feedback visual de sucesso
+                            importBtn.innerHTML = '<i class="fas fa-check"></i> Importado!';
+                            setTimeout(() => {
+                                importBtn.innerHTML = originalText;
+                                importBtn.disabled = false;
+                            }, 2000);
+                        } else {
+                            alert('Erro: ' + data.error);
+                            importBtn.innerHTML = originalText;
+                            importBtn.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error('Erro:', error);
+                        alert('Erro ao conectar com o servidor.');
+                        importBtn.innerHTML = originalText;
+                        importBtn.disabled = false;
+                    }
+                });
+            }
         });
     </script>
 </body>
