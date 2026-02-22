@@ -8,11 +8,15 @@ import io
 import requests
 import markdown
 import re
+import sys 
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_default')
+
+# Configuração para upload de arquivos
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limite de 16MB para uploads
 
 @app.template_filter('markdown')
 def render_markdown(text):
@@ -84,6 +88,7 @@ def get_github_readme(github_url):
 
 @app.route('/profile_image')
 def profile_image():
+    print("--- [DEBUG] Requisitando profile_image ---")
     conn = get_db_connection()
     cur = conn.cursor()
     try:
@@ -91,22 +96,54 @@ def profile_image():
         record = cur.fetchone()
         
         if record and record[0]:
-            response = make_response(send_file(
-                io.BytesIO(record[0]),
-                mimetype='image/jpeg',
-                as_attachment=False,
-                download_name='profile.jpg'
-            ))
-            response.headers['Cache-Control'] = 'public, max-age=86400'
-            return response
+            data = record[0]
+            print(f"--- [DEBUG] Imagem encontrada no banco. Tipo: {type(data)} ---")
             
-    except Exception:
-        pass
+            # Se for memoryview (comum em alguns drivers), converte para bytes
+            if isinstance(data, memoryview):
+                data = data.tobytes()
+                print("--- [DEBUG] Convertido de memoryview para bytes ---")
+            
+            # Se for string (possivelmente hex ou escape), tenta converter
+            if isinstance(data, str):
+                try:
+                    # Tenta decodificar se for hex string (começa com \x ou similar)
+                    if data.startswith('\\x'):
+                        data = bytes.fromhex(data[2:])
+                    else:
+                        # Tenta encode direto se for string 'normal'
+                        data = data.encode('utf-8') # Ou latin-1, dependendo do encoding do banco
+                    print("--- [DEBUG] Convertido de string para bytes ---")
+                except Exception as e:
+                    print(f"--- [DEBUG] Falha ao converter string para bytes: {e} ---")
+
+            if isinstance(data, (bytes, bytearray)):
+                print(f"--- [DEBUG] Enviando imagem. Tamanho: {len(data)} bytes ---")
+                response = make_response(send_file(
+                    io.BytesIO(data),
+                    mimetype='image/jpeg',
+                    as_attachment=False,
+                    download_name='profile.jpg'
+                ))
+                response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                response.headers['Pragma'] = 'no-cache'
+                response.headers['Expires'] = '0'
+                return response
+            else:
+                print(f"--- [DEBUG] ERRO: Dados no banco são do tipo {type(data)}, esperado bytes/bytearray ---")
+        else:
+            print("--- [DEBUG] Nenhuma imagem encontrada no banco ou campo vazio ---")
+            
+    except Exception as e:
+        print(f"--- [DEBUG] Erro ao carregar imagem: {e} ---")
     finally:
         cur.close()
         conn.close()
     
-    return redirect(url_for('static', filename='yo.jpg'))
+    print("--- [DEBUG] Retornando imagem padrão (placeholder) ---")
+    # Retorna uma imagem placeholder gerada dinamicamente se não houver imagem
+    # Isso evita o erro 404 se o arquivo estático não existir
+    return redirect("https://via.placeholder.com/150")
 
 @app.route('/')
 def index():
@@ -195,6 +232,7 @@ def fetch_readme():
 @app.route('/admin/profile/update', methods=['POST'])
 @login_required
 def update_profile():
+    print("--- [DEBUG] Iniciando update_profile ---")
     data = request.form
     file = request.files.get('avatar_file')
     
@@ -207,7 +245,12 @@ def update_profile():
         
         image_data = None
         if file and file.filename:
+            print(f"--- [DEBUG] Arquivo recebido: {file.filename} ---")
+            # Lê os dados binários do arquivo
             image_data = file.read()
+            print(f"--- [DEBUG] Tamanho do arquivo lido: {len(image_data)} bytes ---")
+        else:
+            print("--- [DEBUG] Nenhum arquivo 'avatar_file' recebido ou filename vazio ---")
 
         if exists:
             query = """
@@ -218,25 +261,32 @@ def update_profile():
                       data['github_link'], data['linkedin_link'], data['resume_link']]
             
             if image_data:
+                print("--- [DEBUG] Atualizando coluna avatar_data no banco ---")
                 query += ", avatar_data=%s"
-                params.append(image_data)
+                # Força o uso de psycopg2.Binary para garantir que seja tratado como bytea
+                params.append(psycopg2.Binary(image_data))
+            else:
+                print("--- [DEBUG] Mantendo avatar_data existente (sem update) ---")
                 
             query += " WHERE id=%s"
             params.append(exists[0])
             
             cur.execute(query, tuple(params))
         else:
+            print("--- [DEBUG] Inserindo novo perfil ---")
             cur.execute("""
                 INSERT INTO portifolio_profile (name, role, bio, avatar_data, github_link, linkedin_link, resume_link)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (data['name'], data['role'], data['bio'], image_data, 
+            """, (data['name'], data['role'], data['bio'], psycopg2.Binary(image_data) if image_data else None, 
                   data['github_link'], data['linkedin_link'], data['resume_link']))
             
         conn.commit()
+        print("--- [DEBUG] Commit realizado com sucesso ---")
         flash('Perfil atualizado!', 'success')
     except Exception as e:
         conn.rollback()
-        flash(f'Erro: {str(e)}', 'error')
+        print(f"--- [DEBUG] ERRO CRÍTICO ao atualizar perfil: {e} ---")
+        flash(f'Erro ao atualizar perfil: {str(e)}', 'error')
     finally:
         conn.close()
         

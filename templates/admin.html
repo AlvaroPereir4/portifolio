@@ -255,10 +255,19 @@
             const cancelCropButton = document.getElementById('cancel-crop-button');
             const avatarPreview = document.getElementById('avatar-preview');
             let cropper;
+            let isProcessing = false; // Flag para evitar processamento duplo
 
             fileInput.addEventListener('change', (e) => {
+                console.log("--- [DEBUG] Input file change detectado ---");
+                // Se estivermos processando o recorte, ignorar o evento change
+                if (isProcessing) {
+                    console.log("--- [DEBUG] Ignorando change pois isProcessing = true ---");
+                    return;
+                }
+
                 const files = e.target.files;
                 if (files && files.length > 0) {
+                    console.log("--- [DEBUG] Arquivo selecionado:", files[0].name, "Tamanho:", files[0].size);
                     const reader = new FileReader();
                     reader.onload = () => {
                         imageToCrop.src = reader.result;
@@ -279,12 +288,20 @@
                         }, 100);
                     };
                     reader.readAsDataURL(files[0]);
+                    
+                    // Limpa o valor do input para permitir selecionar o mesmo arquivo se cancelar
+                    // Mas salvamos o arquivo temporariamente caso precise
+                } else {
+                    console.log("--- [DEBUG] Nenhum arquivo selecionado no evento change ---");
                 }
             });
 
             cropButton.addEventListener('click', (e) => {
-                e.preventDefault(); // Previne comportamento padrão
+                console.log("--- [DEBUG] Botão Recortar clicado ---");
+                e.preventDefault();
                 if (!cropper) return;
+
+                isProcessing = true; // Marca como processando
 
                 const canvas = cropper.getCroppedCanvas({
                     width: 512,
@@ -293,22 +310,49 @@
                     imageSmoothingQuality: 'high',
                 });
 
+                if (!canvas) {
+                    alert('Erro ao processar a imagem. Tente novamente.');
+                    isProcessing = false;
+                    return;
+                }
+
                 canvas.toBlob((blob) => {
+                    if (!blob) {
+                        alert('Erro ao criar o arquivo de imagem.');
+                        isProcessing = false;
+                        return;
+                    }
+                    console.log("--- [DEBUG] Blob criado. Tamanho:", blob.size);
+
                     // Cria um novo arquivo a partir do blob
                     const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+                    console.log("--- [DEBUG] Novo arquivo criado:", croppedFile.name, croppedFile.size);
 
                     // Atualiza o input file com o novo arquivo
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(croppedFile);
                     fileInput.files = dataTransfer.files;
+                    console.log("--- [DEBUG] Input file atualizado. Arquivos:", fileInput.files.length);
 
                     // Atualiza o preview
-                    avatarPreview.src = URL.createObjectURL(croppedFile);
+                    const newUrl = URL.createObjectURL(croppedFile);
+                    avatarPreview.onload = () => {
+                        // Libera memória quando a imagem carregar
+                        // URL.revokeObjectURL(newUrl); // Comentado para evitar sumir em alguns casos
+                    };
+                    avatarPreview.src = newUrl;
 
                     // Fecha modal e limpa
                     modal.style.display = 'none';
                     cropper.destroy();
                     cropper = null;
+                    
+                    // Pequeno delay para liberar a flag
+                    setTimeout(() => {
+                        isProcessing = false;
+                        console.log("--- [DEBUG] Processamento finalizado. isProcessing = false ---");
+                    }, 100);
+
                 }, 'image/jpeg', 0.9);
             });
 
@@ -319,7 +363,8 @@
                     cropper.destroy();
                     cropper = null;
                 }
-                fileInput.value = ''; // Limpa a seleção
+                fileInput.value = ''; // Limpa a seleção para permitir selecionar de novo
+                isProcessing = false;
             });
             
             // Fechar modal clicando fora
@@ -331,6 +376,7 @@
                         cropper = null;
                     }
                     fileInput.value = '';
+                    isProcessing = false;
                 }
             }
 
